@@ -1,0 +1,15 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.home{
+  font-size: 30px;
+}
+
+.container{
+  height: 100%;
+}
+
+.content{
+  padding: 30px;
+}

@@ -1,0 +1,7 @@
+<div>
+  <h3>{{requestType | titlecase }} Request List <span class="spacer"></span><button type="button" mat-raised-button  color="primary" [routerLink]="['/','portal','issues', requestType ,'create']"><mat-icon>add</mat-icon>Request</button></h3>
+  <div *ngIf="dataSource.length;else dataNoFind">
+    <app-issues-table [dataSource]="dataSource" [initData]="pageInitData" [browseUrl]="browseUrl" (pageEventEmitter)="pageEvents($event)"></app-issues-table>
+  </div>
+  <ng-template #dataNoFind><div *ngIf="currentUser">Issue queue is empty.</div></ng-template>
+</div>

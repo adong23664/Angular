@@ -1,0 +1,37 @@
+<div *ngIf="dataSource.length">
+  <mat-table #table1 [dataSource]="dataSource">
+    <ng-container matColumnDef="key">
+      <mat-header-cell *matHeaderCellDef> Key </mat-header-cell>
+      <mat-cell *matCellDef="let element"><a class="issue-link" [href]="browseUrl+element.key" target="_blank">{{element.key}}</a></mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="summary">
+      <mat-header-cell *matHeaderCellDef> Summary </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.fields.summary}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.fields.status.name}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="created">
+      <mat-header-cell *matHeaderCellDef> Created </mat-header-cell>
+      <mat-cell *matCellDef="let element"> {{element.fields.created | date:'yyyy/M/d h:mm a'}} </mat-cell>
+    </ng-container>
+
+
+    <ng-container matColumnDef="action">
+      <mat-header-cell *matHeaderCellDef> Action </mat-header-cell>
+      <mat-cell *matCellDef="let element"><button mat-raised-button color="primary" [routerLink]="['/','portal','issues',element.key]">Detail</button></mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+  <mat-paginator #paginator1 [length]="initData.length"
+              [pageSize]="initData.pageSize"
+              [pageIndex]="initData.pageIndex"
+              (page)="pageEvents($event)">
+  </mat-paginator>
+</div>

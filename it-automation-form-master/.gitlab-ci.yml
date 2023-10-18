@@ -1,0 +1,108 @@
+default:
+  tags:
+    - curl-jenkins
+
+variables:
+  DOCKER_REGISTRY: 125919661051.dkr.ecr.ap-northeast-1.amazonaws.com
+  AWS_DEFAULT_REGION: ap-northeast-1
+# trigger-jenkins:
+#   stage: build
+#   script:
+#     - apt update && apt upgrade -y
+#     - apt-get install curl -y
+#     - curl --insecure -i -X POST -u dbfa6e25-4f54-4244-9d3b-212d7d6c6275:118822edb9323479d8e9e5f3c4f8030e11 https://mhq-jenkins.moxa.com/job/it-automation-form/buildWithParameters?token=iTauToMATionForm --data-urlencode "MyDescription=Started by GitLab push by ${GITLAB_USER_LOGIN}!" --data-urlencode "BRANCHES=${CI_COMMIT_REF_NAME}!"
+
+stages:
+  - artifactory
+  - push-s3
+  - push-ecr
+  - build-information
+  - trigger-octopus
+
+build-artifactory:
+  stage: artifactory
+  image: bitnami/git:latest
+  script:
+   - git archive --format=tar.gz --output ./it-automation-form.tar.gz HEAD
+  artifacts:
+    untracked: true
+    paths:
+    - it-automation-form.tar.gz
+    expire_in: 30 mins
+
+push-artifactory-to-s3:
+  stage: push-s3
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+   - ls -a
+   - aws s3 ls
+   - aws s3 cp ./it-automation-form.tar.gz s3://moxa-mhq-jenkins/it-automation/stage/it-automation-form-${CI_PIPELINE_IID}.tar.gz
+
+upload-docker-image:
+  stage: push-ecr
+  image:
+    name: docker:24.0.6-dind
+  before_script:
+    - docker info
+    - apk add --no-cache python3 py3-pip
+    - pip3 install --no-cache-dir awscli
+  script:
+    - docker build -t it-automation-form:${CI_PIPELINE_IID} .
+    - docker tag it-automation-form:${CI_PIPELINE_IID} $DOCKER_REGISTRY/it-automation-form:${CI_PIPELINE_IID}
+    - docker tag it-automation-form:${CI_PIPELINE_IID} $DOCKER_REGISTRY/it-automation-form:latest
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+    - docker push $DOCKER_REGISTRY/it-automation-form:${CI_PIPELINE_IID}
+    - docker push $DOCKER_REGISTRY/it-automation-form:latest
+
+build-information:
+    stage: build-information
+    image: mcr.microsoft.com/dotnet/core/sdk:3.1
+    script:
+        - |
+          pwsh -c '$headers = @{ "PRIVATE-TOKEN" = $env:GITLAB_PAT}
+
+          # Get commits from GitLab
+          $commits = (Invoke-RestMethod -Method Get -Uri "https://gitlab.com/api/v4/projects/$($env:CI_PROJECT_ID)/repository/commits?first_parent=true" -Headers $headers)
+
+          # Create payload
+          $jsonPayload = @{
+            PackageId = "ItAutomationForm"
+            Version = "0.0.${CI_PIPELINE_IID}"
+            Branch = $env:CI_COMMIT_BRANCH
+            BuildUrl = $env:CI_PIPELINE_URL
+            BuildNumber = $env:CI_PIPELINE_ID
+            BuildEnvironment = "GitLabCI"
+            VcsCommitNumber = $env:CI_COMMIT_SHA
+            VcsType = "Git"
+            VcsRoot = $env:CI_PROJECT_URL
+            Commits = @()
+          }
+
+          # Loop through commits and add to collection
+          foreach ($commit in $commits)
+          {
+            $commitInfo = @{
+              Id = $commit.id
+              LinkUrl = $commit.web_url
+              Comment = $commit.message
+            }
+            $jsonPayload.Commits += $commitInfo
+          }
+
+          # Write information to file
+          Add-Content -Path "BuildInformation.json" -Value "$($jsonPayload | ConvertTo-JSON -Depth 10)"'
+    artifacts:
+      paths: [ BuildInformation.json ]
+
+push-package:
+  stage: trigger-octopus
+  image:
+    name: octopuslabs/gitlab-octocli:9.1.7
+  before_script:
+    - mv ./it-automation-form.tar.gz ./ItAutomationForm.0.0.${CI_PIPELINE_IID}.tar.gz
+  script:
+    - octo version
+    - octo help
+    - octo push --package="./ItAutomationForm.0.0.${CI_PIPELINE_IID}.tar.gz" --server="https://mhq-deploy.moxa.com" --apiKey=$OCTOPUS_CLI_API_KEY --space="Default" --overwrite-mode="FailIfExists"
+    - octo build-information --package-id=it-automation-form --version=0.0.${CI_PIPELINE_IID} --file=BuildInformation.json --overwrite-mode="FailIfExists" --server="https://mhq-deploy.moxa.com" --apiKey=$OCTOPUS_CLI_API_KEY --space="Default"
+    - octo create-release --project=IT-AUTOMATION-FORM --version=0.0.${CI_PIPELINE_IID} --server="https://mhq-deploy.moxa.com" --apiKey=$OCTOPUS_CLI_API_KEY --space="Default"

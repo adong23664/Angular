@@ -1,0 +1,48 @@
+currentBuild.description = "${MyDescription}"
+pipeline {
+    agent any
+    stages {
+        stage('Archive Java project') {
+             steps {
+                echo 'Archiving..'
+                script {
+                    echo 'Archiving project...'
+                    sh 'git archive --format=tar.gz --output ./it-automation-form.tar.gz HEAD'
+                    echo 'Uploading archived project to s3...'
+                    sh "docker run --rm -v ${WORKSPACE}:/app -v /usr/local/src/aws_docker_file/.aws:/root/.aws mikesir87/aws-cli aws s3 cp /app/it-automation-form.tar.gz s3://moxa-mhq-jenkins/it-automation/stage/it-automation-form-${env.BUILD_ID}.tar.gz"
+                }
+            }
+        }
+    }
+    post {
+        // Clean after build
+        always {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true)
+        }
+        success {
+            mail to: 'MarkMY.Hsieh@moxa.com',
+            from: 'MHQ-Jenkins@moxa.com',
+            cc: '',
+            bcc: '',
+            replyTo: '',
+            charset: 'UTF-8',
+            mimeType: 'text/html',
+            subject: "[Jenkins] Pipeline: ${currentBuild.fullDisplayName} build success",
+            body: "Pipeline: ${env.JOB_NAME} <br>Build Number: ${env.BUILD_NUMBER} <br> Build url: ${env.BUILD_URL}";
+        }
+        failure {
+            mail to: 'MarkMY.Hsieh@moxa.com',
+            from: 'MHQ-Jenkins@moxa.com',
+            cc: '',
+            bcc: '',
+            replyTo: '',
+            charset: 'UTF-8',
+            mimeType: 'text/html',
+            subject: "[Jenkins] Pipeline ${env.JOB_NAME} Build Failed",
+            body: "<font color='red'><b>The pipeline just built failed!</b></font><br>Pipeline: ${env.JOB_NAME} <br>Build Number: ${env.BUILD_NUMBER} <br> Build url: ${env.BUILD_URL}";
+        }
+    }
+}

@@ -1,0 +1,35 @@
+.center{
+  text-align: center;
+}
+
+::ng-deep .display-flex {
+  display: flex;
+}
+::ng-deep .flex-1 {
+  flex: 1;
+}
+::ng-deep .flex-2 {
+  flex: 2;
+}
+::ng-deep .flex-3 {
+  flex: 3;
+}
+::ng-deep .flex-4 {
+  flex: 4;
+}
+::ng-deep .flex-5 {
+  flex: 5;
+}
+::ng-deep .flex-6 {
+  flex: 6;
+}
+::ng-deep [class*="flex-"] {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+::ng-deep [class*="flex-"]:first-child {
+  padding-left: 0;
+}
+::ng-deep [class*="flex-"]:nth-last-child(2) {
+  padding-right: 0;
+}

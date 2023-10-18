@@ -1,0 +1,18 @@
+.img-icon{
+  width: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+.comment-btn-block{
+  text-align: end;
+}
+
+.comment-btn-block button{
+  margin-left: 10px;
+}
+
+.tab-block{
+  padding: 10px;
+}

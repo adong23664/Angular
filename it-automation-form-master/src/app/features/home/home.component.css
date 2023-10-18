@@ -1,0 +1,11 @@
+.issue-link{
+  color: white;
+}
+
+.issue-link:hover {
+  color: #b3dbdb;
+}
+
+.issue-link:visited {
+  color: #008787;
+}

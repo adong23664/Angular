@@ -1,0 +1,13 @@
+<div>
+  <mat-form-field>
+    <mat-select [(value)]="selectedUser" placeholder="Select Current User" (selectionChange)="changeUser($event.value)">
+      <mat-option>None</mat-option>
+      <mat-option *ngFor="let item of userList" [value]="item">{{item.label}}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <h3>My Requests</h3>
+  <div *ngIf="dataSource.length;else dataNoFind">
+    <app-issues-table [dataSource]="dataSource" [initData]="pageInitData" [browseUrl]="browseUrl" (pageEventEmitter)="pageEvents($event)"></app-issues-table>
+  </div>
+  <ng-template #dataNoFind><div *ngIf="selectedUser">Issue queue is empty.</div></ng-template>
+</div>

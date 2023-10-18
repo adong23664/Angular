@@ -1,0 +1,23 @@
+<mat-drawer-container class="container" autosize>
+  <mat-drawer #drawer class="sidenav" mode="side">
+    <mat-list>
+      <mat-list-item><button mat-button routerLink="/"><mat-icon>home</mat-icon>首頁</button></mat-list-item>
+      <mat-list-item *ngFor="let requestType of requestTypeList"><button mat-button [routerLink]="['/','portal','issues','request',requestType.value]"><mat-icon>{{requestTypeIcon[requestType.value]}}</mat-icon>{{requestType.value}}</button></mat-list-item>
+    </mat-list>
+  </mat-drawer>
+
+  <mat-drawer-content>
+      <mat-toolbar color="primary">
+        <button mat-button (click)="drawer.toggle()"><mat-icon>menu</mat-icon></button>
+        <button mat-button class="icon" mat-button routerLink="/">
+          <span class="home">IT Automation Portal</span>
+        </button>
+        <h2></h2>
+        <span class="spacer"></span>
+      </mat-toolbar>
+      <div class="content">
+        <router-outlet></router-outlet>
+      </div>
+  </mat-drawer-content>
+</mat-drawer-container>
+<app-loader></app-loader>

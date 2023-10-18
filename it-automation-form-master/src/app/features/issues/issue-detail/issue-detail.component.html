@@ -1,0 +1,72 @@
+<div *ngIf="issueData">
+  <button type="button" mat-raised-button  color="primary" (click)="pageBack()"><mat-icon>reply</mat-icon>Back</button>
+  <mat-list role="list" *ngIf="issueData">
+    <mat-list-item>
+      {{issueData.fields['customfield_16400'].fieldValue.value}} / {{issueData.key}}
+    </mat-list-item>
+    <mat-list-item>
+      <h3>{{issueData.fields.summary}} <button type="button" mat-raised-button  color="primary" [routerLink]="['/','portal','issues', requestType, issueData.key,'edit']"><mat-icon>create</mat-icon>Edit</button></h3>
+    </mat-list-item>
+    <mat-list-item>
+      Description: {{issueData.fields.description}}
+    </mat-list-item>
+    <mat-list-item>
+      Priority: <img class="img-icon" [src]="issueData.fields.priority.iconUrl"/>{{issueData.fields.priority.name}}
+    </mat-list-item>
+    <mat-list-item>
+      Status:
+      <button mat-stroked-button [matMenuTriggerFor]="menu">{{issueData.fields.status.name}}<mat-icon iconPositionEnd>arrow_drop_down</mat-icon></button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item *ngFor="let item of issueData.transitions" (click)="doTransition(item)">{{item.name}} -> {{item.to.name}}</button>
+      </mat-menu>
+    </mat-list-item>
+    <ng-container *ngIf="issueData.fields['customfield_16400'].fieldValue.value=='Firewall'">
+      <mat-list-item *ngIf="issueData.fields['customfield_16401']">
+        Issue Type: {{issueData.fields['customfield_16401'].fieldValue.value}}
+      </mat-list-item>
+      <mat-list-item *ngIf="issueData.fields['customfield_16402']">
+        Have Certificate: {{issueData.fields['customfield_16402'].fieldValue.value}}
+      </mat-list-item>
+    </ng-container>
+    <mat-list-item>
+      Creator: {{issueData.fields.creator.displayName}}
+    </mat-list-item>
+    <mat-list-item>
+      Assignee: {{issueData.fields.assignee?.displayName}}
+    </mat-list-item>
+    <mat-list-item>
+      Reporter: {{issueData.fields.reporter.displayName}}
+    </mat-list-item>
+    <mat-list-item>
+      Created: {{issueData.fields.created  | date:'yyyy/M/d h:mm a'}}
+    </mat-list-item>
+    <mat-list-item>
+      Updated: {{issueData.fields.updated  | date:'yyyy/M/d h:mm a'}}
+    </mat-list-item>
+  </mat-list>
+  <mat-tab-group mat-align-tabs="start">
+    <mat-tab label="Comment">
+      <div class="tab-block">
+        <button type="button" mat-raised-button  *ngIf="!showCommentBlock" color="primary" (click)="showComment()"><mat-icon>chat_add_on</mat-icon>Comment</button>
+        <div *ngIf="showCommentBlock">
+          <mat-form-field class="full-width">
+            <input matInput placeholder="Say something...">
+          </mat-form-field>
+          <div class='comment-btn-block'>
+            <button type="button" mat-raised-button  color="primary"><mat-icon>add_comment</mat-icon>Add</button>
+            <button type="button" mat-raised-button  color="primary" (click)="hideComment()">Cancel</button>
+          </div>
+        </div>
+        <mat-list>
+          <ng-container *ngFor="let comment of commentList">
+            <mat-list-item >
+                <div>{{ comment.created |  date:'yyyy/M/d h:mm a'}}</div>
+                <div>{{comment.body}}</div>
+            </mat-list-item>
+            <mat-divider></mat-divider>
+        </ng-container>
+        </mat-list>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

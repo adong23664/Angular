@@ -1,0 +1,16 @@
+<div>
+  <button type="button" mat-raised-button  color="primary" (click)="pageBack()"><mat-icon>reply</mat-icon>返回</button>
+  <h3>Create Firewall Request</h3>
+  <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
+    <formly-form [form]="form" [fields]="fields" [model]="model" [options]="options"></formly-form>
+    <div class="center">
+      <button type="button" *ngIf="firewallIndex>1" mat-raised-button color="primary" (click)="removeField()">Remove Item</button>
+    </div>
+    <hr>
+    <div class="center">
+      <button type="button" mat-raised-button color="primary" (click)="addField()"><mat-icon>add</mat-icon>Add New Item</button>
+    </div>
+    <br>
+    <button type="submit" mat-raised-button color="primary" [disabled]="form.invalid">Submit</button>
+  </form>
+</div>
